@@ -1,0 +1,750 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Cloudformation templates that create a hierarchical set of groups,
+  users and roles for use in a stand-alone AWS development account. A 
+  distinction is made between Console Users and Programmatic Users. 
+  A default password is supplied to Console Users and Secret Access 
+  Keys are generated for Programmatic Users. The Console Administrator 
+  Account is created within the Root Account and the hierarchical 
+  collection of groups and users is then created within that Console 
+  Administrator Account.
+
+# ------------------------------------------
+
+
+# ==========================================
+Metadata: {}
+# Metadata:
+
+
+# ==========================================
+# Parameters: {}
+Parameters:
+
+  # ------------------------------------------
+  # --- Password for Console Users
+  IamUsrConsolePassword:
+    Description: "Temp Password"
+    ConstraintDescription: "Specify Password for Console Users"
+    Type: String
+    NoEcho: true
+    Default: "Test1234Test1234"
+
+
+# ==========================================
+Conditions: {}
+# Conditions:
+
+
+# ==========================================
+Resources:
+
+
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  #         IAM GROUP DECLARATIONS
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  # ------------------------------------------
+  # --- Group Definition
+  IamGrpUsrPwr:
+    # .............................
+    Type: "AWS::IAM::Group"
+    Properties:
+      # .............................
+      Path: "/usr/"
+      GroupName: "grp.usr.pwr"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/PowerUserAccess"
+
+  # ------------------------------------------
+  # --- Group Definition
+  IamGrpUsrMail:
+    # .............................
+    Type: "AWS::IAM::Group"
+    Properties:
+      # .............................
+      Path: "/usr/"
+      GroupName: "grp.usr.mail"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonWorkMailFullAccess"
+
+  # ------------------------------------------
+  # --- Group Definition
+  IamGrpJobViewOnly:
+    # .............................
+    Type: "AWS::IAM::Group"
+    Properties:
+      # .............................
+      Path: "/job/"
+      GroupName: "grp.job.viewonly"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/job-function/ViewOnlyAccess"
+
+  # ------------------------------------------
+  # --- Group Definition
+  IamGrpJobSysadmin:
+    # .............................
+    Type: "AWS::IAM::Group"
+    Properties:
+      # .............................
+      Path: "/job/"
+      GroupName: "grp.job.sysadmin"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/job-function/SystemAdministrator"
+
+  # ------------------------------------------
+  # --- Group Definition
+  IamGrpAllReadOnly:
+    # .............................
+    Type: "AWS::IAM::Group"
+    Properties:
+      # .............................
+      Path: "/"
+      GroupName: "grp.all.readonly"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/ReadOnlyAccess"
+
+  # ------------------------------------------
+  # --- Group Definition
+  IamGrpIamFull:
+    # .............................
+    Type: "AWS::IAM::Group"
+    Properties:
+      # .............................
+      Path: "/iam/"
+      GroupName: "grp.iam.full"
+      ManagedPolicyArns:
+        - !Ref PolicyIamFullAccess
+
+  # ------------------------------------------
+  # --- Group Definition
+  IamGrpIamCreateRole:
+    # .............................
+    Type: "AWS::IAM::Group"
+    Properties:
+      # .............................
+      Path: "/iam/"
+      GroupName: "grp.iam.createrole"
+      ManagedPolicyArns: 
+        - !Ref PolicyIamDeleteInstanceProfile
+        - !Ref PolicyIamCreateInstanceProfile
+        - !Ref PolicyIamCreateServiceRole
+        - !Ref PolicyIamCreatePolicy
+
+  # ------------------------------------------
+  # --- Group Definition
+  IamGrpIamPassRole:
+    # .............................
+    Type: "AWS::IAM::Group"
+    Properties:
+      # .............................
+      Path: "/iam/"
+      GroupName: "grp.iam.passrole"
+      ManagedPolicyArns:
+        - !Ref PolicyIamPassRoleAll
+
+  # ------------------------------------------
+  # --- Group Definition
+  IamGrpIamReadOnly:
+    # .............................
+    Type: "AWS::IAM::Group"
+    Properties:
+      # .............................
+      Path: "/iam/"
+      GroupName: "grp.iam.readonly"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/IAMReadOnlyAccess"
+
+  # ------------------------------------------
+  # --- Group Definition
+  IamGrpS3Full:
+    # .............................
+    Type: "AWS::IAM::Group"
+    Properties:
+      # .............................
+      Path: "/s3/"
+      GroupName: "grp.s3.full"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+
+  # ------------------------------------------
+  # --- Group Definition
+  IamGrpS3ReadOnly:
+    # .............................
+    Type: "AWS::IAM::Group"
+    Properties:
+      # .............................
+      Path: "/s3/"
+      GroupName: "grp.s3.readonly"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+
+  # ------------------------------------------
+  # --- Group Definition
+  IamGrpSsmFull:
+    # .............................
+    Type: "AWS::IAM::Group"
+    Properties:
+      # .............................
+      Path: "/ssm/"
+      GroupName: "grp.ssm.full"
+      ManagedPolicyArns:
+      - "arn:aws:iam::aws:policy/AWSHealthFullAccess"
+      - "arn:aws:iam::aws:policy/AWSConfigUserAccess"
+      - "arn:aws:iam::aws:policy/AmazonSSMFullAccess"
+      - "arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess"
+      - "arn:aws:iam::aws:policy/ResourceGroupsandTagEditorFullAccess"
+
+  # ------------------------------------------
+  # --- Group Definition
+  IamGrpSesSmtp:
+    # .............................
+    Type: "AWS::IAM::Group"
+    Properties:
+      # .............................
+      Path: "/ses/"
+      GroupName: "grp.ses.smtp"
+      ManagedPolicyArns:
+        - !Ref PolicySesSmtpClient
+
+
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  #         IAM USER DECLARATIONS
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  # ------------------------------------------
+  # --- User Definition
+  IamUsrConsoleViewOnly:
+    # .............................
+    Type: "AWS::IAM::User"
+    Properties:
+      # .............................
+      Path: "/"
+      UserName: "usr.console.viewonly"
+      Groups:
+        - !Ref IamGrpJobViewOnly
+      LoginProfile:
+        PasswordResetRequired: true
+        Password: !Ref IamUsrConsolePassword
+      Tags: 
+        - 
+          Key: "Access"
+          Value: "console"
+        - 
+          Key: "Reference"
+          Value: "stack"
+
+  # ------------------------------------------
+  # --- User Definition
+  IamUsrConsoleSysAdmin:
+    # .............................
+    Type: "AWS::IAM::User"
+    Properties:
+      # .............................
+      Path: "/"
+      UserName: "usr.console.sysadmin"
+      Groups:
+        - !Ref IamGrpJobSysadmin
+      LoginProfile:
+        PasswordResetRequired: true
+        Password: !Ref IamUsrConsolePassword
+      Tags: 
+        - 
+          Key: "Access"
+          Value: "console"
+        - 
+          Key: "Reference"
+          Value: "stack"
+
+  # ------------------------------------------
+  # --- User Definition
+  IamUsrConsoleSsm:
+    # .............................
+    Type: "AWS::IAM::User"
+    Properties:
+      # .............................
+      Path: "/"
+      UserName: "usr.console.ssm"
+      Groups:
+        - !Ref IamGrpSsmFull
+      LoginProfile:
+        PasswordResetRequired: true
+        Password: !Ref IamUsrConsolePassword
+      Tags: 
+        - 
+          Key: "Access"
+          Value: "console"
+        - 
+          Key: "Reference"
+          Value: "stack"
+
+  # ------------------------------------------
+  # --- User Definition
+  IamUsrConsoleMail:
+    # .............................
+    Type: "AWS::IAM::User"
+    Properties:
+      # .............................
+      Path: "/"
+      UserName: "usr.console.mail"
+      Groups:
+        - !Ref IamGrpUsrMail
+      LoginProfile:
+        PasswordResetRequired: true
+        Password: !Ref IamUsrConsolePassword
+      Tags: 
+        - 
+          Key: "Access"
+          Value: "console"
+        - 
+          Key: "Reference"
+          Value: "stack"
+
+  # ------------------------------------------
+  # --- SysAdmin User Definition
+  IamUsrProgSysAdmin:
+    # .............................
+    Type: "AWS::IAM::User"
+    Properties:
+      # .............................
+      Path: "/"
+      UserName: "usr.prog.sysadmin"
+      Groups:
+        - !Ref IamGrpJobSysadmin
+      Tags: 
+        - 
+          Key: "Access"
+          Value: "programmatic"
+        - 
+          Key: "Reference"
+          Value: "stack"
+
+  # ------------------------------------------
+  # --- SSM Admin User Definition
+  IamUsrProgSsm:
+    # .............................
+    Type: "AWS::IAM::User"
+    Properties:
+      # .............................
+      Path: "/"
+      UserName: "usr.prog.ssm"
+      Groups:
+        - !Ref IamGrpSsmFull
+      Tags: 
+        - 
+          Key: "Access"
+          Value: "programmatic"
+        - 
+          Key: "Reference"
+          Value: "stack"
+
+  # ------------------------------------------
+  # --- Former2 User Definition
+  IamUsrProgFormer2:
+    # .............................
+    Type: "AWS::IAM::User"
+    Properties:
+      # .............................
+      Path: "/"
+      UserName: "usr.prog.former2"
+      Groups:
+        - !Ref IamGrpAllReadOnly
+      Tags: 
+        - 
+          Key: "Access"
+          Value: "programmatic"
+        - 
+          Key: "Reference"
+          Value: "stack"
+
+  # ------------------------------------------
+  # --- Power User Definition
+  IamUsrProgPwr:
+    # .............................
+    Type: "AWS::IAM::User"
+    Properties:
+      # .............................
+      Path: "/"
+      UserName: "usr.prog.pwr"
+      Groups:
+        - !Ref IamGrpUsrPwr
+        - !Ref IamGrpIamReadOnly
+        - !Ref IamGrpIamPassRole
+        - !Ref IamGrpIamCreateRole
+      Tags: 
+        - 
+          Key: "Access"
+          Value: "programmatic"
+        - 
+          Key: "Reference"
+          Value: "stack"
+
+  # ------------------------------------------
+  # --- S3 Presign User Definition
+  IamUsrProgS3Presign:
+    # .............................
+    Type: "AWS::IAM::User"
+    Properties:
+      # .............................
+      Path: "/"
+      UserName: "usr.prog.s3presign"
+      Groups:
+        - !Ref IamGrpS3ReadOnly
+      Tags: 
+        - 
+          Key: "Access"
+          Value: "programmatic"
+        - 
+          Key: "Reference"
+          Value: "stack"
+
+  # ------------------------------------------
+  # --- SMTP Client User Definition
+  IamUsrProgSesSmtp:
+    # .............................
+    Type: "AWS::IAM::User"
+    Properties:
+      # .............................
+      Path: "/"
+      UserName: "usr.prog.smtp"
+      Groups:
+        - !Ref IamGrpSesSmtp
+      Tags: 
+        - 
+          Key: "Access"
+          Value: "programmatic"
+        - 
+          Key: "Reference"
+          Value: "stack"
+
+
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  #         IAM MANAGED POLICIES
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  # ------------------------------------------
+  # --- Policy Definition
+  PolicyIamPassRoleAll:
+    # .............................
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      # .............................
+      ManagedPolicyName: "CE-IamPassRoleAll"
+      Path: "/"
+      PolicyDocument:
+        # .............................
+        Version: "2012-10-17"
+        Id: "IamPassRoleAllPolicy"
+        Statement:
+          -
+            Sid: "IamPassRoleAll"
+            Effect: "Allow"
+            Resource: "*"
+            Action:
+              - "iam:GetRole"
+              - "iam:PassRole"
+
+  # ------------------------------------------
+  # --- Policy Definition
+  PolicyIamFullAccess:
+    # .............................
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      # .............................
+      ManagedPolicyName: "CE-IamFullAccess"
+      Path: "/"
+      PolicyDocument:
+        # .............................
+        Version: "2012-10-17"
+        Id: "IamFullAccessPolicy"
+        Statement:
+          -   
+            Sid: "IamFullAccess"
+            Effect: "Allow"
+            Resource: "*"
+            Action: 
+              - "iam:*"
+
+  # ------------------------------------------
+  # --- Policy Definition
+  PolicyIamCreateInstanceProfile:
+    # .............................
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      # .............................
+      ManagedPolicyName: "CE-IamCreateInstanceProfile"
+      Path: "/"
+      PolicyDocument:
+        # .............................
+        Version: "2012-10-17"
+        Id: "IamCreateInstanceProfilePolicy"
+        Statement:
+          # ---
+          -
+            Sid: "CreateServiceRole"
+            Effect: "Allow"
+            Resource: "*"
+            Action:
+              - "iam:AttachRolePolicy"
+              - "iam:CreateRole"
+              - "iam:PutRolePolicy"
+          # ---
+          -
+            Sid: "CreateInstanceProfile"
+            Effect: "Allow"
+            Resource: "*"
+            Action:
+              - "iam:AddRoleToInstanceProfile"
+              - "iam:CreateInstanceProfile"
+
+  # ------------------------------------------
+  # --- Policy Definition
+  PolicyIamDeleteInstanceProfile:
+    # .............................
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      # .............................
+      ManagedPolicyName: "CE-IamDeleteInstanceProfile"
+      Path: "/"
+      PolicyDocument:
+        # .............................
+        Version: "2012-10-17"
+        Id: "IamDeleteInstanceProfilePolicy"
+        Statement:
+          -
+            Sid: "IamDeleteInstanceProfile"
+            Effect: "Allow"
+            Resource: "*"
+            Action:
+              - "iam:DeleteInstanceProfile"
+              - "iam:DeleteRolePolicy"
+              - "iam:RemoveRoleFromInstanceProfile"
+              - "iam:DeleteRole"
+
+  # ------------------------------------------
+  # --- Policy Definition
+  PolicyIamCreateServiceRole:
+    # .............................
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      # .............................
+      ManagedPolicyName: "CE-IamCreateServiceRole"
+      Path: "/"
+      PolicyDocument:
+        # .............................
+        Version: "2012-10-17"
+        Id: "IamCreateServiceRolePolicy"
+        Statement:
+          - 
+            Sid: "CreateAnyServiceRole"
+            Effect: "Allow"
+            Resource: "*"
+            Action:
+              - "iam:AttachRolePolicy"
+              - "iam:CreateRole"
+              - "iam:PutRolePolicy"
+
+  # ------------------------------------------
+  # --- Policy Definition
+  PolicyIamCreatePolicy:
+    # .............................
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      # .............................
+      ManagedPolicyName: "CE-IamCreatePolicy"
+      Path: "/"
+      PolicyDocument:
+        # .............................
+        Version: "2012-10-17"
+        Id: "IamCreatePolicyPolicy"
+        Statement:
+          - 
+            Sid: "CreateAnyPolicy"
+            Effect: "Allow"
+            Resource: "*"
+            Action:
+              - "iam:CreatePolicy"
+
+  # ------------------------------------------
+  # --- Policy Definition
+  PolicySesSmtpClient:
+    # .............................
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      # .............................
+      ManagedPolicyName: "CE-SesSmtpClient"
+      Path: "/"
+      PolicyDocument:
+        # .............................
+        Version: "2012-10-17"
+        Id: "SesSmtpClient"
+        Statement:
+          - 
+            Sid: "SendAnyEmail"
+            Effect: "Allow"
+            Resource: "*"
+            Action:
+              - "ses:SendRawEmail"
+
+  # ------------------------------------------
+  # --- Policy Definition
+  PolicySnsPublish2Topic:
+    # .............................
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      # .............................
+      ManagedPolicyName: "CE-SnsPublish2Topic"
+      Path: "/"
+      PolicyDocument:
+        # .............................
+        Version: "2012-10-17"
+        Id: "SnsPublish2Topic"
+        Statement:
+          - 
+            Sid: "Publish2AnyTopic"
+            Effect: "Allow"
+            Resource: "*"
+            Action:
+              - "sns:Publish"
+
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  #         IAM USER ACCESS KEYS
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  # ------------------------------------------
+  # --- Key Definition
+  IamUsrProgSysAdminAccessKey:
+    # .............................
+    Type: "AWS::IAM::AccessKey"
+    Properties:
+      # .............................
+      UserName: !Ref IamUsrProgSysAdmin
+      Status: "Active"
+
+  # ------------------------------------------
+  # --- Key Definition
+  IamUsrProgSsmAccessKey:
+    # .............................
+    Type: "AWS::IAM::AccessKey"
+    Properties:
+      # .............................
+      UserName: !Ref IamUsrProgSsm
+      Status: "Active"
+
+  # ------------------------------------------
+  # --- Key Definition
+  IamUsrProgFormer2AccessKey:
+    # .............................
+    Type: "AWS::IAM::AccessKey"
+    Properties:
+      # .............................
+      UserName: !Ref IamUsrProgFormer2
+      Status: "Active"
+
+  # ------------------------------------------
+  # --- Key Definition
+  IamUsrProgPwrAccessKey:
+    # .............................
+    Type: "AWS::IAM::AccessKey"
+    Properties:
+      # .............................
+      UserName: !Ref IamUsrProgPwr
+      Status: "Active"
+
+  # ------------------------------------------
+  # --- Key Definition
+  IamUsrProgS3PresignAccessKey:
+    # .............................
+    Type: "AWS::IAM::AccessKey"
+    Properties:
+      # .............................
+      UserName: !Ref IamUsrProgS3Presign
+      Status: "Active"
+
+  # ------------------------------------------
+  # --- Key Definition
+  IamUsrProgSesSmtpAccessKey:
+    # .............................
+    Type: "AWS::IAM::AccessKey"
+    Properties:
+      # .............................
+      UserName: !Ref IamUsrProgSesSmtp
+      Status: "Active"
+
+
+# ==========================================
+# Outputs: {}
+Outputs:
+
+  # ------------------------------------------
+  # --- SysAdmin User AccessKeyId
+  IamUsrProgSysAdminAccessKeyId:
+    Description: "usr.prog.sysadmin AccessKeyId"
+    Value: !Ref IamUsrProgSysAdminAccessKey
+
+  # ------------------------------------------
+  # --- SysAdmin User SecretAccessKey
+  IamUsrProgSysAdminSecretKey:
+    Description: "usr.prog.sysadmin SecretAccessKey"
+    Value: !GetAtt IamUsrProgSysAdminAccessKey.SecretAccessKey
+
+  # ------------------------------------------
+  # --- SSM Admin User AccessKeyId
+  IamUsrProgSsmAccessKeyId:
+    Description: "usr.prog.ssm AccessKeyId"
+    Value: !Ref IamUsrProgSsmAccessKey
+
+  # ------------------------------------------
+  # --- SSM Admin User SecretAccessKey
+  IamUsrProgSsmSecretKey:
+    Description: "usr.prog.ssm SecretAccessKey"
+    Value: !GetAtt IamUsrProgSsmAccessKey.SecretAccessKey
+
+  # ------------------------------------------
+  # --- Former2 User AccessKeyId
+  IamUsrProgFormer2AccessKeyId:
+    Description: "usr.prog.former2 AccessKeyId"
+    Value: !Ref IamUsrProgFormer2AccessKey
+
+  # ------------------------------------------
+  # --- Former2 User SecretAccessKey
+  IamUsrProgFormer2SecretKey:
+    Description: "usr.prog.former2 SecretAccessKey"
+    Value: !GetAtt IamUsrProgFormer2AccessKey.SecretAccessKey
+
+  # ------------------------------------------
+  # --- Power User AccessKeyId
+  IamUsrProgPwrAccessKeyId:
+    Description: "usr.prog.pwr AccessKeyId"
+    Value: !Ref IamUsrProgPwrAccessKey
+
+  # ------------------------------------------
+  # --- Power User SecretAccessKey
+  IamUsrProgPwrSecretKey:
+    Description: "usr.prog.pwr SecretAccessKey"
+    Value: !GetAtt IamUsrProgPwrAccessKey.SecretAccessKey
+
+  # ------------------------------------------
+  # --- S3 Presign User AccessKeyId
+  IamUsrProgS3PresignAccessKeyId:
+    Description: "usr.prog.s3presign AccessKeyId"
+    Value: !Ref IamUsrProgS3PresignAccessKey
+
+  # ------------------------------------------
+  # --- S3 Presign User SecretAccessKey
+  IamUsrProgS3PresignSecretKey:
+    Description: "usr.prog.s3presign SecretAccessKey"
+    Value: !GetAtt IamUsrProgS3PresignAccessKey.SecretAccessKey
+
+  # ------------------------------------------
+  # --- SMTP Client User AccessKeyId
+  IamUsrProgSesSmtpAccessKeyId:
+    Description: "usr.prog.smtp AccessKeyId"
+    Value: !Ref IamUsrProgSesSmtpAccessKey
+
+  # ------------------------------------------
+  # --- SMTP Client User SecretAccessKey
+  IamUsrProgSesSmtpSecretKey:
+    Description: "usr.prog.smtp SecretAccessKey"
+    Value: !GetAtt IamUsrProgSesSmtpAccessKey.SecretAccessKey

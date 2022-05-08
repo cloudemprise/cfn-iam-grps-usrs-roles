@@ -1,0 +1,94 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  A Cloudformation template that creates a Console Adminstrator 
+  User for a standalone AWS development account. This template 
+  is expected to be run within the Root Account.
+
+# ------------------------------------------
+
+
+# ==========================================
+Metadata: {}
+# Metadata:
+
+
+# ==========================================
+# Parameters: {}
+Parameters:
+
+  # ------------------------------------------
+  # --- Password for Console Users
+  IamUsrConsolePassword:
+    Description: "Temp Password"
+    ConstraintDescription: "Specify Password for Console Users"
+    Type: String
+    NoEcho: true
+    Default: "Test1234Test1234"
+
+
+# ==========================================
+Conditions: {}
+# Conditions:
+
+
+# ==========================================
+Resources:
+
+
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  #         IAM GROUP DECLARATIONS
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  # ------------------------------------------
+  # --- Group Definition
+  IamGrpUsrAdmin:
+    # .............................
+    Type: "AWS::IAM::Group"
+    Properties:
+      # .............................
+      Path: "/"
+      GroupName: "grp.usr.admin"
+      ManagedPolicyArns: 
+        - "arn:aws:iam::aws:policy/AdministratorAccess"
+
+  # ------------------------------------------
+  # --- Group Definition
+  IamGrpUsrBill:
+    # .............................
+    Type: "AWS::IAM::Group"
+    Properties:
+      # .............................
+      Path: "/"
+      GroupName: "grp.usr.billing"
+      ManagedPolicyArns: 
+        - "arn:aws:iam::aws:policy/job-function/Billing"
+
+
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  #         IAM USER DECLARATIONS
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  # ------------------------------------------
+  # --- User Definition
+  IamUsrConsoleAdmin:
+    # .............................
+    Type: "AWS::IAM::User"
+    Properties:
+      # .............................
+      Path: "/"
+      UserName: "usr.console.admin"
+      Tags: 
+        - 
+          Key: "Access"
+          Value: "console"
+      Groups: 
+        - !Ref IamGrpUsrAdmin
+        - !Ref IamGrpUsrBill
+      LoginProfile:
+        PasswordResetRequired: true
+        Password: !Ref IamUsrConsolePassword
+
+# ==========================================
+Outputs: {}
+# Outputs:
