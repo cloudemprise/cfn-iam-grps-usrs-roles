@@ -640,7 +640,7 @@ Resources:
     Properties:
       # .............................
       UserName: !Ref IamUsrProgFormer2
-      Status: "Active"
+      Status: "Inactive"
 
   # ------------------------------------------
   # --- Key Definition
